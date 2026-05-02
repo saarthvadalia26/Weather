@@ -6,10 +6,10 @@
 
 @layer utilities {
   .glass {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply bg-white/[0.05] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
   }
   .glass-dark {
-    @apply bg-black/20 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply bg-black/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
   }
 }
 

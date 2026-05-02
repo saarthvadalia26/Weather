@@ -18,14 +18,14 @@ interface WeatherData {
 
 // --- Utility Functions ---
 const getBackgroundGradient = (weatherMain: string, isDay: boolean) => {
-  if (!isDay) return "from-slate-900 via-blue-900 to-slate-900";
+  if (!isDay) return "from-slate-950 via-blue-950 to-black";
   switch (weatherMain.toLowerCase()) {
-    case "clear": return "from-blue-400 via-sky-300 to-blue-200";
-    case "clouds": return "from-slate-400 via-gray-300 to-slate-200";
-    case "rain": case "drizzle": return "from-slate-700 via-blue-800 to-slate-900";
-    case "thunderstorm": return "from-purple-900 via-slate-900 to-black";
-    case "snow": return "from-blue-100 via-white to-blue-50";
-    default: return "from-blue-400 via-sky-300 to-blue-200";
+    case "clear": return "from-blue-600 via-blue-500 to-indigo-400";
+    case "clouds": return "from-slate-600 via-gray-700 to-slate-800";
+    case "rain": case "drizzle": return "from-slate-800 via-blue-950 to-black";
+    case "thunderstorm": return "from-purple-950 via-slate-950 to-black";
+    case "snow": return "from-blue-200 via-slate-100 to-blue-50";
+    default: return "from-blue-600 via-blue-500 to-indigo-400";
   }
 };
 
