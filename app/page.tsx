@@ -131,10 +131,10 @@ function GridDetails({ current }: { current: any }) {
       className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto mt-6"
     >
       {details.map((detail, idx) => (
-        <div key={idx} className="glass-dark rounded-2xl p-4 flex flex-col items-center justify-center gap-2">
-          <div className="text-white/70">{detail.icon}</div>
-          <span className="text-xs font-medium text-white/60 uppercase tracking-wider">{detail.label}</span>
-          <span className="text-lg font-semibold">{detail.value}</span>
+        <div key={idx} className="glass-dark rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-white/10">
+          <div className="text-white">{detail.icon}</div>
+          <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{detail.label}</span>
+          <span className="text-lg font-bold text-white">{detail.value}</span>
         </div>
       ))}
     </motion.div>
@@ -157,16 +157,16 @@ function HourlyForecast({ forecast }: { forecast: any }) {
       <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
         {hourlyData.map((item: any, idx: number) => (
           <div key={idx} className="flex flex-col items-center min-w-[60px] gap-2">
-            <span className="text-xs font-medium text-white/80">
+            <span className="text-xs font-bold text-white">
               {format(new Date(item.dt * 1000), 'HH:mm')}
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`} 
               alt={item.weather[0].main}
-              className="w-10 h-10"
+              className="w-10 h-10 filter drop-shadow-md"
             />
-            <span className="text-sm font-bold">{Math.round(item.main.temp)}°</span>
+            <span className="text-sm font-black text-white">{Math.round(item.main.temp)}°</span>
           </div>
         ))}
       </div>
