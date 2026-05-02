@@ -102,6 +102,15 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
       <h1 className="text-8xl font-bold tracking-tighter mb-2 drop-shadow-lg">
         {temp}°
       </h1>
+      <div className="flex items-center gap-4 mb-2">
+        <span className="text-white font-semibold text-lg">
+          ↑ {Math.round(current.main.temp_max)}°
+        </span>
+        <span className="text-white/60 text-sm">·</span>
+        <span className="text-white/70 font-semibold text-lg">
+          ↓ {Math.round(current.main.temp_min)}°
+        </span>
+      </div>
       <p className="text-2xl font-light tracking-wide text-white/90 capitalize mb-6">
         {current.weather[0].description}
       </p>
