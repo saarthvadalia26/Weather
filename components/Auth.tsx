@@ -38,7 +38,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="fixed top-6 left-6 z-50">
+    <div className="relative z-50">
       {user ? (
         <button 
           onClick={handleLogout}
