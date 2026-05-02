@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Search, Wind, Droplets, Sun, Navigation, Loader2 } from "lucide-react";
+import { MapPin, Search, Wind, Droplets, Sun, Navigation, Loader2, Heart } from "lucide-react";
 import { format } from "date-fns";
+import Auth from "@/components/Auth";
+import { supabase } from "@/lib/supabase";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -59,11 +61,10 @@ function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
   );
 }
 
-function WeatherCard({ data }: { data: WeatherData }) {
+function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: () => void, isSaved?: boolean }) {
   const { current } = data;
   const temp = Math.round(current.main.temp);
   const condition = current.weather[0].main;
-  const isDay = current.dt > current.sys.sunrise && current.dt < current.sys.sunset;
   
   return (
     <motion.div
@@ -72,9 +73,16 @@ function WeatherCard({ data }: { data: WeatherData }) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="glass-dark rounded-3xl p-8 flex flex-col items-center justify-center text-center w-full max-w-md mx-auto relative overflow-hidden"
     >
-      <div className="absolute top-6 right-6 flex items-center gap-1 text-white/80">
-         <MapPin size={16}/>
-         <span className="text-sm font-medium tracking-wider">{current.name}, {current.sys.country}</span>
+      <div className="absolute top-6 right-6 flex items-center gap-3 text-white/80">
+         <div className="flex items-center gap-1">
+           <MapPin size={16}/>
+           <span className="text-sm font-medium tracking-wider">{current.name}, {current.sys.country}</span>
+         </div>
+         {onSave && (
+           <button onClick={onSave} className={`transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
+             <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
+           </button>
+         )}
       </div>
 
       <motion.div 
@@ -172,6 +180,55 @@ export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<any>(null);
+  const [savedLocations, setSavedLocations] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchSavedLocations();
+    } else {
+      setSavedLocations([]);
+    }
+  }, [user]);
+
+  const fetchSavedLocations = async () => {
+    const { data } = await supabase
+      .from('saved_locations')
+      .select('*');
+    setSavedLocations(data || []);
+  };
+
+  const handleSaveLocation = async () => {
+    if (!user || !weatherData) return;
+    
+    const isSaved = savedLocations.some(l => l.city_name === weatherData.current.name);
+    
+    if (isSaved) {
+      await supabase
+        .from('saved_locations')
+        .delete()
+        .eq('city_name', weatherData.current.name);
+    } else {
+      await supabase
+        .from('saved_locations')
+        .insert({
+          user_id: user.id,
+          city_name: weatherData.current.name,
+          country_code: weatherData.current.sys.country,
+          lat: weatherData.current.coord.lat,
+          lon: weatherData.current.coord.lon
+        });
+    }
+    fetchSavedLocations();
+  };
 
   const fetchWeather = async (params: { lat?: number; lon?: number; city?: string }) => {
     setLoading(true);
@@ -218,6 +275,7 @@ export default function Home() {
 
   return (
     <main className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br ${bgClass} transition-colors duration-1000 px-4 py-8 sm:p-8 flex flex-col`}>
+      <Auth />
       <SearchBar onSearch={handleSearch} />
 
       <AnimatePresence mode="wait">
@@ -249,9 +307,31 @@ export default function Home() {
             animate={{ opacity: 1 }}
             className="flex-1 w-full flex flex-col"
           >
-            <WeatherCard data={weatherData} />
+            <WeatherCard 
+              data={weatherData} 
+              onSave={user ? handleSaveLocation : undefined}
+              isSaved={savedLocations.some(l => l.city_name === weatherData.current.name)}
+            />
             <GridDetails current={weatherData.current} />
             <HourlyForecast forecast={weatherData.forecast} />
+
+            {user && savedLocations.length > 0 && (
+              <div className="w-full max-w-md mx-auto mt-8">
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4 ml-2">Saved Locations</h3>
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4">
+                  {savedLocations.map((loc: any) => (
+                    <button
+                      key={loc.id}
+                      onClick={() => fetchWeather({ lat: loc.lat, lon: loc.lon })}
+                      className="glass rounded-2xl px-4 py-3 flex items-center gap-2 whitespace-nowrap hover:bg-white/20 transition-all shrink-0"
+                    >
+                      <MapPin size={14} className="text-white/60" />
+                      <span className="text-sm font-medium">{loc.city_name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>
