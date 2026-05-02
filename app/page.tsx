@@ -200,24 +200,30 @@ export default function Home() {
   }, [user]);
 
   const fetchSavedLocations = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('saved_locations')
       .select('*');
+    if (error) console.error("Error fetching locations:", error);
     setSavedLocations(data || []);
   };
 
   const handleSaveLocation = async () => {
-    if (!user || !weatherData) return;
+    if (!user || !weatherData) {
+      console.log("No user or weather data", { user, weatherData });
+      return;
+    }
     
     const isSaved = savedLocations.some(l => l.city_name === weatherData.current.name);
-    
+    console.log("Attempting to save/unsave:", weatherData.current.name, "isSaved:", isSaved);
+
     if (isSaved) {
-      await supabase
+      const { error } = await supabase
         .from('saved_locations')
         .delete()
         .eq('city_name', weatherData.current.name);
+      if (error) console.error("Error deleting location:", error);
     } else {
-      await supabase
+      const { error } = await supabase
         .from('saved_locations')
         .insert({
           user_id: user.id,
@@ -226,6 +232,7 @@ export default function Home() {
           lat: weatherData.current.coord.lat,
           lon: weatherData.current.coord.lon
         });
+      if (error) console.error("Error inserting location:", error);
     }
     fetchSavedLocations();
   };
