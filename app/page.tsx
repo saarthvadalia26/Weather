@@ -360,7 +360,6 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
   const fetchSavedLocations = useCallback(async () => {
     const { data, error } = await supabase
       .from('saved_locations')
