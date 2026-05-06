@@ -13,6 +13,8 @@ export async function GET(request: Request) {
   }
 
   try {
+    const locationQuery = city || (lat && lon ? `${lat},${lon}` : "London");
+    
     // Tomorrow.io v4 Forecast API
     // Explicitly requesting fields to ensure UV and AQI are included
     const fields = [
@@ -20,7 +22,7 @@ export async function GET(request: Request) {
       "uvIndex", "epaIndex", "visibility", "weatherCode", "weatherCodeMax"
     ].join(",");
     
-    const url = `https://api.tomorrow.io/v4/weather/forecast?location=${encodeURIComponent(location)}&apikey=${API_KEY}&units=metric&fields=${fields}`;
+    const url = `https://api.tomorrow.io/v4/weather/forecast?location=${encodeURIComponent(locationQuery)}&apikey=${API_KEY}&units=metric&fields=${fields}`;
     
     const res = await fetch(url, { next: { revalidate: 600 } }); // Cache for 10 mins
     const data = await res.json();
