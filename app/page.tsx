@@ -217,6 +217,9 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
       <h1 className="text-8xl font-black tracking-tighter mb-2 drop-shadow-lg text-white">
         {temp}°
       </h1>
+      <p className="text-lg font-bold text-white/60 mb-4 uppercase tracking-widest">
+        Feels like {Math.round(current.values.temperatureApparent)}°
+      </p>
       <p className="text-2xl font-medium tracking-wide text-white capitalize mb-6">
         {info.description}
       </p>
