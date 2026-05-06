@@ -12,11 +12,41 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 // --- Type Definitions ---
 interface WeatherData {
-  current: any;
-  forecast: any;
+  timelines: {
+    hourly: any[];
+    daily: any[];
+  };
+  location: {
+    name: string;
+    lat: number;
+    lon: number;
+  };
 }
 
 // --- Utility Functions ---
+const getWeatherInfo = (code: number) => {
+  const mapping: Record<number, { main: string; description: string; icon: string }> = {
+    0: { main: "Unknown", description: "Unknown", icon: "01d" },
+    1000: { main: "Clear", description: "Clear, sunny", icon: "01d" },
+    1100: { main: "Clear", description: "Mostly clear", icon: "01d" },
+    1101: { main: "Clouds", description: "Partly cloudy", icon: "02d" },
+    1102: { main: "Clouds", description: "Mostly cloudy", icon: "03d" },
+    1001: { main: "Clouds", description: "Cloudy", icon: "04d" },
+    2000: { main: "Fog", description: "Fog", icon: "50d" },
+    2100: { main: "Fog", description: "Light fog", icon: "50d" },
+    4000: { main: "Drizzle", description: "Drizzle", icon: "09d" },
+    4001: { main: "Rain", description: "Rain", icon: "10d" },
+    4200: { main: "Rain", description: "Light rain", icon: "09d" },
+    4201: { main: "Rain", description: "Heavy rain", icon: "10d" },
+    5000: { main: "Snow", description: "Snow", icon: "13d" },
+    5001: { main: "Snow", description: "Flurries", icon: "13d" },
+    5100: { main: "Snow", description: "Light snow", icon: "13d" },
+    5101: { main: "Snow", description: "Heavy snow", icon: "13d" },
+    8000: { main: "Thunderstorm", description: "Thunderstorm", icon: "11d" },
+  };
+  return mapping[code] || mapping[0];
+};
+
 const getBackgroundGradient = (weatherMain: string, isDay: boolean) => {
   if (!isDay) return "from-slate-950 via-blue-950 to-black";
   switch (weatherMain.toLowerCase()) {
@@ -62,9 +92,9 @@ function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
 }
 
 function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: () => void, isSaved?: boolean }) {
-  const { current } = data;
-  const temp = Math.round(current.main.temp);
-  const condition = current.weather[0].main;
+  const current = data.timelines.hourly[0];
+  const info = getWeatherInfo(current.values.weatherCode);
+  const temp = Math.round(current.values.temperature);
   
   return (
     <motion.div
@@ -76,10 +106,10 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
        <div className="absolute top-6 right-6 flex flex-col items-end gap-1 text-white/80">
           <div className="flex items-center gap-1">
             <MapPin size={14} className="text-white/60"/>
-            <span className="text-sm font-medium tracking-wider">{current.name}, {current.sys.country}</span>
+            <span className="text-sm font-medium tracking-wider">{data.location.name}</span>
           </div>
           <span className="text-[10px] font-medium text-white/40 uppercase tracking-tighter">
-            Last updated: {format(new Date(current.dt * 1000), 'HH:mm')}
+            Last updated: {format(new Date(current.time), 'HH:mm')}
           </span>
           {onSave && (
             <button onClick={onSave} className={`mt-2 transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
@@ -96,8 +126,8 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
-          src={`http://openweathermap.org/img/wn/${current.weather[0].icon}@4x.png`} 
-          alt={condition}
+          src={`http://openweathermap.org/img/wn/${info.icon}@4x.png`} 
+          alt={info.main}
           className="w-40 h-40 drop-shadow-2xl"
         />
       </motion.div>
@@ -106,12 +136,12 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
         {temp}°
       </h1>
       <p className="text-2xl font-light tracking-wide text-white/90 capitalize mb-6">
-        {current.weather[0].description}
+        {info.description}
       </p>
 
       <div className="glass rounded-2xl p-4 w-full text-left">
         <p className="text-sm text-white/90 italic font-light leading-relaxed">
-          {generateVibeSummary(temp, current.weather[0].description)}
+          {generateVibeSummary(temp, info.description)}
         </p>
       </div>
     </motion.div>
@@ -120,10 +150,10 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
 
 function GridDetails({ current }: { current: any }) {
   const details = [
-    { icon: <Wind size={24} />, label: "Wind", value: `${current.wind.speed} m/s` },
-    { icon: <Droplets size={24} />, label: "Humidity", value: `${current.main.humidity}%` },
-    { icon: <Sun size={24} />, label: "Pressure", value: `${current.main.pressure} hPa` },
-    { icon: <Navigation size={24} />, label: "Visibility", value: `${(current.visibility / 1000).toFixed(1)} km` },
+    { icon: <Wind size={24} />, label: "Wind", value: `${current.values.windSpeed} m/s` },
+    { icon: <Droplets size={24} />, label: "Humidity", value: `${current.values.humidity}%` },
+    { icon: <Sun size={24} />, label: "Visibility", value: `${current.values.visibility} km` },
+    { icon: <Navigation size={24} />, label: "Pressure", value: `${Math.round(current.values.pressureSurfaceLevel)} hPa` },
   ];
 
   return (
@@ -144,8 +174,8 @@ function GridDetails({ current }: { current: any }) {
   );
 }
 
-function HourlyForecast({ forecast }: { forecast: any }) {
-  const hourlyData = forecast.list.slice(0, 8); // Next 24 hours (3h intervals)
+function HourlyForecast({ hourly }: { hourly: any[] }) {
+  const hourlyData = hourly.slice(0, 8); 
 
   return (
     <motion.div
@@ -158,20 +188,23 @@ function HourlyForecast({ forecast }: { forecast: any }) {
         <Loader2 size={16} className="animate-spin-slow"/> 24-Hour Forecast
       </h3>
       <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-        {hourlyData.map((item: any, idx: number) => (
-          <div key={idx} className="flex flex-col items-center min-w-[60px] gap-2">
-            <span className="text-xs font-bold text-white">
-              {format(new Date(item.dt * 1000), 'HH:mm')}
-            </span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={`http://openweathermap.org/img/wn/${item.weather[0].icon}.png`} 
-              alt={item.weather[0].main}
-              className="w-10 h-10 filter drop-shadow-md"
-            />
-            <span className="text-sm font-black text-white">{Math.round(item.main.temp)}°</span>
-          </div>
-        ))}
+        {hourlyData.map((item: any, idx: number) => {
+          const info = getWeatherInfo(item.values.weatherCode);
+          return (
+            <div key={idx} className="flex flex-col items-center min-w-[60px] gap-2">
+              <span className="text-xs font-bold text-white">
+                {format(new Date(item.time), 'HH:mm')}
+              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
+                alt={info.main}
+                className="w-10 h-10 filter drop-shadow-md"
+              />
+              <span className="text-sm font-black text-white">{Math.round(item.values.temperature)}°</span>
+            </div>
+          );
+        })}
       </div>
     </motion.div>
   );
@@ -216,24 +249,24 @@ export default function Home() {
       return;
     }
     
-    const isSaved = savedLocations.some(l => l.city_name === weatherData.current.name);
-    console.log("Attempting to save/unsave:", weatherData.current.name, "isSaved:", isSaved);
+    const isSaved = savedLocations.some(l => l.city_name === weatherData.location.name);
+    console.log("Attempting to save/unsave:", weatherData.location.name, "isSaved:", isSaved);
 
     if (isSaved) {
       const { error } = await supabase
         .from('saved_locations')
         .delete()
-        .eq('city_name', weatherData.current.name);
+        .eq('city_name', weatherData.location.name);
       if (error) console.error("Error deleting location:", error);
     } else {
       const { error } = await supabase
         .from('saved_locations')
         .insert({
           user_id: user.id,
-          city_name: weatherData.current.name,
-          country_code: weatherData.current.sys.country,
-          lat: weatherData.current.coord.lat,
-          lon: weatherData.current.coord.lon
+          city_name: weatherData.location.name,
+          country_code: "N/A", // Tomorrow.io doesn't return country code in simple location
+          lat: weatherData.location.lat,
+          lon: weatherData.location.lon
         });
       if (error) console.error("Error inserting location:", error);
     }
@@ -279,8 +312,12 @@ export default function Home() {
   // Determine dynamic background
   let bgClass = "from-slate-900 to-black"; // Default loading state
   if (weatherData) {
-    const isDay = weatherData.current.dt > weatherData.current.sys.sunrise && weatherData.current.dt < weatherData.current.sys.sunset;
-    bgClass = getBackgroundGradient(weatherData.current.weather[0].main, isDay);
+    const current = weatherData.timelines.hourly[0];
+    const info = getWeatherInfo(current.values.weatherCode);
+    const date = new Date(current.time);
+    const hour = date.getHours();
+    const isDay = hour > 6 && hour < 19; // Simplified day/night for Tomorrow.io
+    bgClass = getBackgroundGradient(info.main, isDay);
   }
 
   return (
@@ -324,10 +361,10 @@ export default function Home() {
             <WeatherCard 
               data={weatherData} 
               onSave={user ? handleSaveLocation : undefined}
-              isSaved={savedLocations.some(l => l.city_name === weatherData.current.name)}
+              isSaved={savedLocations.some(l => l.city_name === weatherData.location.name)}
             />
-            <GridDetails current={weatherData.current} />
-            <HourlyForecast forecast={weatherData.forecast} />
+            <GridDetails current={weatherData.timelines.hourly[0]} />
+            <HourlyForecast hourly={weatherData.timelines.hourly} />
 
             {user && savedLocations.length > 0 && (
               <div className="w-full max-w-md mx-auto mt-8">

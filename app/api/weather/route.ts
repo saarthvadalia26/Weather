@@ -6,38 +6,27 @@ export async function GET(request: Request) {
   const lon = searchParams.get('lon');
   const city = searchParams.get('city');
 
-  const API_KEY = process.env.OPENWEATHERMAP_API_KEY;
+  const API_KEY = process.env.TOMORROW_API_KEY;
 
   if (!API_KEY) {
-    return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'Tomorrow.io API key not configured' }, { status: 500 });
   }
 
   try {
-    let url = '';
-    if (lat && lon) {
-      url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
-    } else if (city) {
-      url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
-    } else {
-      return NextResponse.json({ error: 'Missing location parameters' }, { status: 400 });
-    }
-
-    const res = await fetch(url, { next: { revalidate: 300 } }); // Cache for 5 mins
+    const location = city || (lat && lon ? `${lat},${lon}` : "London");
+    
+    // Tomorrow.io v4 Forecast API
+    // Returns current, hourly, and daily data
+    const url = `https://api.tomorrow.io/v4/weather/forecast?location=${encodeURIComponent(location)}&apikey=${API_KEY}&units=metric`;
+    
+    const res = await fetch(url, { next: { revalidate: 600 } }); // Cache for 10 mins
     const data = await res.json();
 
     if (!res.ok) {
-      return NextResponse.json({ error: data.message }, { status: res.status });
+      return NextResponse.json({ error: data.message || "Failed to fetch weather" }, { status: res.status });
     }
 
-    // Fetch forecast data
-    const forecastUrl = lat && lon 
-      ? `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-      : `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`;
-
-    const forecastRes = await fetch(forecastUrl, { next: { revalidate: 300 } });
-    const forecastData = await forecastRes.json();
-
-    return NextResponse.json({ current: data, forecast: forecastData });
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch weather data' }, { status: 500 });
   }
