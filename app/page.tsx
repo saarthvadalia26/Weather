@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Search, Wind, Droplets, Sun, Navigation, Loader2, Heart } from "lucide-react";
+import { 
+  MapPin, Search, Wind, Droplets, Sun, Navigation, 
+  Loader2, Heart, Calendar, CloudRain, ShieldCheck, Activity
+} from "lucide-react";
 import { format } from "date-fns";
 import Auth from "@/components/Auth";
 import { supabase } from "@/lib/supabase";
@@ -67,6 +70,76 @@ const generateVibeSummary = (temp: number, condition: string) => {
   return `Freezing and ${condition}. Bundle up!`;
 };
 
+const getAQIDescription = (index: number) => {
+  if (index <= 50) return "Good";
+  if (index <= 100) return "Moderate";
+  if (index <= 150) return "Unhealthy for Sensitive Groups";
+  return "Unhealthy";
+};
+
+// --- Animations ---
+const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) => {
+  const particles = useMemo(() => Array.from({ length: 20 }), []);
+  
+  if (weatherMain.toLowerCase() === "rain" || weatherMain.toLowerCase() === "drizzle") {
+    return (
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {particles.map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ y: -100, x: Math.random() * 100 + "vw", opacity: 0 }}
+            animate={{ 
+              y: "110vh", 
+              opacity: [0, 0.4, 0] 
+            }}
+            transition={{ 
+              duration: Math.random() * 1 + 0.5, 
+              repeat: Infinity, 
+              delay: Math.random() * 2,
+              ease: "linear"
+            }}
+            className="absolute w-[1px] h-10 bg-white/30"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (weatherMain.toLowerCase() === "clear") {
+    return (
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-yellow-400/20 blur-[120px] rounded-full"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      {particles.map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, scale: Math.random() * 0.5 + 0.5 }}
+          animate={{ 
+            x: [Math.random() * 100 + "vw", (Math.random() * 100 - 20) + "vw"],
+            y: [Math.random() * 100 + "vh", (Math.random() * 100 - 20) + "vh"],
+            opacity: [0, 0.1, 0]
+          }}
+          transition={{ 
+            duration: Math.random() * 20 + 10, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+          className="absolute w-32 h-32 bg-white/10 blur-[40px] rounded-full"
+        />
+      ))}
+    </div>
+  );
+};
+
 // --- Components ---
 
 function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
@@ -84,7 +157,7 @@ function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search city..."
-        className="w-full glass rounded-full py-4 pl-12 pr-6 text-white placeholder-white/70 outline-none focus:ring-2 focus:ring-white/50 transition-all"
+        className="w-full glass rounded-full py-4 pl-12 pr-6 text-white placeholder-white/70 outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-lg"
       />
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70" size={20} />
     </form>
@@ -101,14 +174,14 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="glass-dark rounded-3xl p-8 flex flex-col items-center justify-center text-center w-full max-w-md mx-auto relative overflow-hidden"
+      className="glass-dark rounded-3xl p-8 flex flex-col items-center justify-center text-center w-full max-w-md mx-auto relative overflow-hidden shadow-2xl border border-white/10"
     >
        <div className="absolute top-6 right-6 flex flex-col items-end gap-1 text-white/80">
           <div className="flex items-center gap-1">
             <MapPin size={14} className="text-white/60"/>
-            <span className="text-sm font-medium tracking-wider">{data.location.name}</span>
+            <span className="text-sm font-bold tracking-wider">{data.location.name}</span>
           </div>
-          <span className="text-[10px] font-medium text-white/40 uppercase tracking-tighter">
+          <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
             Last updated: {format(new Date(current.time), 'HH:mm')}
           </span>
           {onSave && (
@@ -122,25 +195,26 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-        className="mt-8 mb-4"
+        className="mt-8 mb-4 relative"
       >
+        <div className="absolute inset-0 bg-white/20 blur-[60px] rounded-full scale-150 opacity-50" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src={`http://openweathermap.org/img/wn/${info.icon}@4x.png`} 
           alt={info.main}
-          className="w-40 h-40 drop-shadow-2xl"
+          className="w-40 h-40 drop-shadow-2xl relative z-10"
         />
       </motion.div>
 
-      <h1 className="text-8xl font-bold tracking-tighter mb-2 drop-shadow-lg">
+      <h1 className="text-8xl font-black tracking-tighter mb-2 drop-shadow-lg text-white">
         {temp}°
       </h1>
-      <p className="text-2xl font-light tracking-wide text-white/90 capitalize mb-6">
+      <p className="text-2xl font-medium tracking-wide text-white capitalize mb-6">
         {info.description}
       </p>
 
       <div className="glass rounded-2xl p-4 w-full text-left">
-        <p className="text-sm text-white/90 italic font-light leading-relaxed">
+        <p className="text-sm text-white italic font-medium leading-relaxed">
           {generateVibeSummary(temp, info.description)}
         </p>
       </div>
@@ -150,10 +224,10 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
 
 function GridDetails({ current }: { current: any }) {
   const details = [
-    { icon: <Wind size={24} />, label: "Wind", value: `${current.values.windSpeed} m/s` },
-    { icon: <Droplets size={24} />, label: "Humidity", value: `${current.values.humidity}%` },
-    { icon: <Sun size={24} />, label: "Visibility", value: `${current.values.visibility} km` },
-    { icon: <Navigation size={24} />, label: "Pressure", value: `${Math.round(current.values.pressureSurfaceLevel)} hPa` },
+    { icon: <Wind size={20} />, label: "Wind", value: `${current.values.windSpeed} m/s` },
+    { icon: <Droplets size={20} />, label: "Humidity", value: `${current.values.humidity}%` },
+    { icon: <Sun size={20} />, label: "UV Index", value: `${current.values.uvIndex || 0}`, sub: current.values.uvIndex > 5 ? "High" : "Low" },
+    { icon: <Activity size={20} />, label: "AQI", value: `${current.values.epaIndex || 0}`, sub: getAQIDescription(current.values.epaIndex) },
   ];
 
   return (
@@ -164,10 +238,11 @@ function GridDetails({ current }: { current: any }) {
       className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto mt-6"
     >
       {details.map((detail, idx) => (
-        <div key={idx} className="glass-dark rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-white/10">
-          <div className="text-white">{detail.icon}</div>
-          <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{detail.label}</span>
-          <span className="text-lg font-bold text-white">{detail.value}</span>
+        <div key={idx} className="glass-dark rounded-2xl p-4 flex flex-col items-center justify-center gap-1 border border-white/5 hover:bg-white/10 transition-colors">
+          <div className="text-white mb-1">{detail.icon}</div>
+          <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{detail.label}</span>
+          <span className="text-lg font-black text-white">{detail.value}</span>
+          {detail.sub && <span className="text-[10px] font-bold text-white/40">{detail.sub}</span>}
         </div>
       ))}
     </motion.div>
@@ -179,29 +254,70 @@ function HourlyForecast({ hourly }: { hourly: any[] }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6 }}
-      className="w-full max-w-md mx-auto mt-6 glass rounded-3xl p-6"
+      className="w-full max-w-md mx-auto mt-6 glass rounded-3xl p-6 border border-white/10 shadow-xl"
     >
-      <h3 className="text-sm font-medium text-white/80 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Loader2 size={16} className="animate-spin-slow"/> 24-Hour Forecast
+      <h3 className="text-xs font-black text-white/80 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <Sun size={14} /> 24-Hour Forecast
       </h3>
       <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
         {hourlyData.map((item: any, idx: number) => {
           const info = getWeatherInfo(item.values.weatherCode);
           return (
             <div key={idx} className="flex flex-col items-center min-w-[60px] gap-2">
-              <span className="text-xs font-bold text-white">
+              <span className="text-[10px] font-bold text-white/80">
                 {format(new Date(item.time), 'HH:mm')}
               </span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
                 alt={info.main}
                 className="w-10 h-10 filter drop-shadow-md"
               />
               <span className="text-sm font-black text-white">{Math.round(item.values.temperature)}°</span>
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+function DailyForecast({ daily }: { daily: any[] }) {
+  const dailyData = daily.slice(0, 7);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.8 }}
+      className="w-full max-w-md mx-auto mt-6 glass rounded-3xl p-6 border border-white/10 shadow-xl"
+    >
+      <h3 className="text-xs font-black text-white/80 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <Calendar size={14} /> 7-Day Forecast
+      </h3>
+      <div className="flex flex-col gap-4">
+        {dailyData.map((item: any, idx: number) => {
+          const info = getWeatherInfo(item.values.weatherCodeMax);
+          const isToday = idx === 0;
+          return (
+            <div key={idx} className="flex items-center justify-between">
+              <span className="text-sm font-bold text-white w-20">
+                {isToday ? "Today" : format(new Date(item.time), 'EEE')}
+              </span>
+              <div className="flex items-center gap-3 flex-1 px-4">
+                <img 
+                  src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
+                  alt={info.main}
+                  className="w-8 h-8 filter drop-shadow-md"
+                />
+                <span className="text-xs font-bold text-white/60 truncate">{info.description}</span>
+              </div>
+              <div className="flex items-center gap-3 w-24 justify-end">
+                <span className="text-sm font-black text-white">{Math.round(item.values.temperatureMax)}°</span>
+                <span className="text-sm font-bold text-white/40">{Math.round(item.values.temperatureMin)}°</span>
+              </div>
             </div>
           );
         })}
@@ -244,31 +360,18 @@ export default function Home() {
   };
 
   const handleSaveLocation = async () => {
-    if (!user || !weatherData) {
-      console.log("No user or weather data", { user, weatherData });
-      return;
-    }
-    
+    if (!user || !weatherData) return;
     const isSaved = savedLocations.some(l => l.city_name === weatherData.location.name);
-    console.log("Attempting to save/unsave:", weatherData.location.name, "isSaved:", isSaved);
-
     if (isSaved) {
-      const { error } = await supabase
-        .from('saved_locations')
-        .delete()
-        .eq('city_name', weatherData.location.name);
-      if (error) console.error("Error deleting location:", error);
+      await supabase.from('saved_locations').delete().eq('city_name', weatherData.location.name);
     } else {
-      const { error } = await supabase
-        .from('saved_locations')
-        .insert({
-          user_id: user.id,
-          city_name: weatherData.location.name,
-          country_code: "N/A", // Tomorrow.io doesn't return country code in simple location
-          lat: weatherData.location.lat,
-          lon: weatherData.location.lon
-        });
-      if (error) console.error("Error inserting location:", error);
+      await supabase.from('saved_locations').insert({
+        user_id: user.id,
+        city_name: weatherData.location.name,
+        country_code: "N/A",
+        lat: weatherData.location.lat,
+        lon: weatherData.location.lon
+      });
     }
     fetchSavedLocations();
   };
@@ -280,7 +383,6 @@ export default function Home() {
       const query = new URLSearchParams(params as any).toString();
       const res = await fetch(`/api/weather?${query}`);
       const data = await res.json();
-      
       if (!res.ok) throw new Error(data.error);
       setWeatherData(data);
     } catch (err: any) {
@@ -293,40 +395,34 @@ export default function Home() {
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude });
-        },
-        () => {
-          fetchWeather({ city: "London" }); // Fallback
-        }
+        (position) => fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude }),
+        () => fetchWeather({ city: "London" })
       );
     } else {
       fetchWeather({ city: "London" });
     }
   }, []);
 
-  const handleSearch = (city: string) => {
-    fetchWeather({ city });
-  };
-
-  // Determine dynamic background
-  let bgClass = "from-slate-900 to-black"; // Default loading state
-  if (weatherData) {
+  const weatherMain = weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
+  const bgClass = useMemo(() => {
+    if (!weatherData) return "from-slate-900 to-black";
     const current = weatherData.timelines.hourly[0];
     const info = getWeatherInfo(current.values.weatherCode);
     const date = new Date(current.time);
     const hour = date.getHours();
-    const isDay = hour > 6 && hour < 19; // Simplified day/night for Tomorrow.io
-    bgClass = getBackgroundGradient(info.main, isDay);
-  }
+    const isDay = hour > 6 && hour < 19;
+    return getBackgroundGradient(info.main, isDay);
+  }, [weatherData]);
 
   return (
-    <main className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br ${bgClass} transition-colors duration-1000 px-4 py-8 sm:p-8 flex flex-col items-center`}>
-      <div className="w-full max-w-md flex flex-col gap-4 mb-8">
+    <main className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br ${bgClass} transition-colors duration-1000 px-4 py-8 sm:p-8 flex flex-col items-center relative`}>
+      <BackgroundParticles weatherMain={weatherMain} />
+      
+      <div className="w-full max-w-md flex flex-col gap-4 mb-8 z-10">
         <div className="flex items-center justify-between gap-4">
           <Auth />
         </div>
-        <SearchBar onSearch={handleSearch} />
+        <SearchBar onSearch={(city) => fetchWeather({ city })} />
       </div>
 
       <AnimatePresence mode="wait">
@@ -336,7 +432,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center text-white"
+            className="flex-1 flex flex-col items-center justify-center text-white z-10"
           >
             <Loader2 className="animate-spin mb-4" size={48} />
             <p className="text-lg font-light tracking-widest uppercase">Atmosphere</p>
@@ -347,7 +443,7 @@ export default function Home() {
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
              exit={{ opacity: 0 }}
-             className="glass rounded-3xl p-8 max-w-md mx-auto text-center mt-20"
+             className="glass rounded-3xl p-8 max-w-md mx-auto text-center mt-20 z-10"
           >
             <p className="text-xl text-red-200">{error}</p>
           </motion.div>
@@ -356,7 +452,7 @@ export default function Home() {
             key="content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex-1 w-full flex flex-col"
+            className="flex-1 w-full flex flex-col z-10 pb-20"
           >
             <WeatherCard 
               data={weatherData} 
@@ -365,10 +461,11 @@ export default function Home() {
             />
             <GridDetails current={weatherData.timelines.hourly[0]} />
             <HourlyForecast hourly={weatherData.timelines.hourly} />
+            <DailyForecast daily={weatherData.timelines.daily} />
 
             {user && savedLocations.length > 0 && (
               <div className="w-full max-w-md mx-auto mt-8">
-                <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4 ml-2">Saved Locations</h3>
+                <h3 className="text-xs font-black text-white/50 uppercase tracking-widest mb-4 ml-2">Saved Locations</h3>
                 <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4">
                   {savedLocations.map((loc: any) => (
                     <button
@@ -377,7 +474,7 @@ export default function Home() {
                       className="glass rounded-2xl px-4 py-3 flex items-center gap-2 whitespace-nowrap hover:bg-white/20 transition-all shrink-0"
                     >
                       <MapPin size={14} className="text-white/60" />
-                      <span className="text-sm font-medium">{loc.city_name}</span>
+                      <span className="text-sm font-bold">{loc.city_name}</span>
                     </button>
                   ))}
                 </div>
