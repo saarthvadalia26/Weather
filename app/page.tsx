@@ -285,6 +285,7 @@ function HourlyForecast({ hourly }: { hourly: any[] }) {
               <span className="text-[10px] font-bold text-white/80">
                 {format(new Date(item.time), 'HH:mm')}
               </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
                 alt={info.main}
@@ -322,6 +323,7 @@ function DailyForecast({ daily }: { daily: any[] }) {
                 {isToday ? "Today" : format(new Date(item.time), 'EEE')}
               </span>
               <div className="flex items-center gap-3 flex-1 px-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
                   alt={info.main}
