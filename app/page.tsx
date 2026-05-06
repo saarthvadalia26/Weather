@@ -5,7 +5,7 @@ import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   MapPin, Search, Wind, Droplets, Sun, Navigation, 
-  Loader2, Heart, Calendar, CloudRain, ShieldCheck, Activity
+  Loader2, Heart, Calendar, CloudRain, ShieldCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import Auth from "@/components/Auth";
@@ -68,13 +68,6 @@ const generateVibeSummary = (temp: number, condition: string) => {
   if (temp > 15) return `Mild and ${condition}. A light jacket might be nice.`;
   if (temp > 5) return `Chilly and ${condition}. Definitely grab a coat.`;
   return `Freezing and ${condition}. Bundle up!`;
-};
-
-const getAQIDescription = (index: number) => {
-  if (index <= 50) return "Good";
-  if (index <= 100) return "Moderate";
-  if (index <= 150) return "Unhealthy for Sensitive Groups";
-  return "Unhealthy";
 };
 
 // --- Animations ---
@@ -242,7 +235,7 @@ function GridDetails({ current }: { current: any }) {
     { icon: <Wind size={20} />, label: "Wind", value: `${current.values.windSpeed} m/s` },
     { icon: <Droplets size={20} />, label: "Humidity", value: `${current.values.humidity}%` },
     { icon: <Sun size={20} />, label: "UV Index", value: `${current.values.uvIndex || 0}`, sub: current.values.uvIndex > 5 ? "High" : "Low" },
-    { icon: <Activity size={20} />, label: "AQI", value: `${current.values.epaIndex || 0}`, sub: getAQIDescription(current.values.epaIndex) },
+    { icon: <Navigation size={20} />, label: "Pressure", value: `${Math.round(current.values.pressureSurfaceLevel)} hPa` },
   ];
 
   return (
