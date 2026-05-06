@@ -415,14 +415,27 @@ export default function Home() {
   }, []);
 
   const handleLocate = useCallback(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude }),
-        () => fetchWeather({ city: "London" })
-      );
-    } else {
-      fetchWeather({ city: "London" });
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
     }
+
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude });
+      },
+      (err) => {
+        setLoading(false);
+        if (err.code === 1) {
+          setError("Location access denied. Please enable it in your browser settings.");
+        } else {
+          setError("Could not determine your location. Showing London as fallback.");
+          fetchWeather({ city: "London" });
+        }
+      },
+      { timeout: 10000 }
+    );
   }, [fetchWeather]);
 
   useEffect(() => {
