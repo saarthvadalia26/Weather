@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -361,20 +361,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchSavedLocations();
-    } else {
-      setSavedLocations([]);
-    }
-  }, [user]);
-
-  const fetchSavedLocations = async () => {
+  const fetchSavedLocations = useCallback(async () => {
     const { data, error } = await supabase
       .from('saved_locations')
       .select('*');
     if (error) console.error("Error fetching locations:", error);
     setSavedLocations(data || []);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchSavedLocations();
+    } else {
+      setSavedLocations([]);
+    }
+  }, [user, fetchSavedLocations]);
 
   const handleSaveLocation = async () => {
     if (!user || !weatherData) return;
@@ -393,7 +394,7 @@ export default function Home() {
     fetchSavedLocations();
   };
 
-  const fetchWeather = async (params: { lat?: number; lon?: number; city?: string }) => {
+  const fetchWeather = useCallback(async (params: { lat?: number; lon?: number; city?: string }) => {
     setLoading(true);
     setError("");
     try {
@@ -407,7 +408,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -418,7 +419,7 @@ export default function Home() {
     } else {
       fetchWeather({ city: "London" });
     }
-  }, []);
+  }, [fetchWeather]);
 
   const weatherMain = weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
   const bgClass = useMemo(() => {
