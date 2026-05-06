@@ -150,7 +150,7 @@ const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) => {
 
 // --- Components ---
 
-function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
+function SearchBar({ onSearch, onLocate }: { onSearch: (city: string) => void, onLocate: () => void }) {
   const [query, setQuery] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -159,16 +159,25 @@ function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative w-full max-w-md mx-auto mb-8 z-10">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search city..."
-        className="w-full glass rounded-full py-4 pl-12 pr-6 text-white placeholder-white/70 outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-lg"
-      />
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70" size={20} />
-    </form>
+    <div className="relative w-full max-w-md mx-auto mb-8 z-10 flex gap-2">
+      <form onSubmit={handleSubmit} className="relative flex-1">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search city..."
+          className="w-full glass rounded-full py-4 pl-12 pr-6 text-white placeholder-white/70 outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-lg"
+        />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70" size={20} />
+      </form>
+      <button 
+        onClick={onLocate}
+        className="glass rounded-full p-4 text-white/70 hover:text-white hover:bg-white/20 transition-all shadow-lg group"
+        title="Detect my location"
+      >
+        <Navigation size={20} className="group-hover:scale-110 transition-transform" />
+      </button>
+    </div>
   );
 }
 
@@ -405,7 +414,7 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
+  const handleLocate = useCallback(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude }),
@@ -415,6 +424,10 @@ export default function Home() {
       fetchWeather({ city: "London" });
     }
   }, [fetchWeather]);
+
+  useEffect(() => {
+    handleLocate();
+  }, [handleLocate]);
 
   const weatherMain = weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
   const bgClass = useMemo(() => {
@@ -435,7 +448,10 @@ export default function Home() {
         <div className="flex items-center justify-between gap-4">
           <Auth />
         </div>
-        <SearchBar onSearch={(city) => fetchWeather({ city })} />
+        <SearchBar 
+          onSearch={(city) => fetchWeather({ city })} 
+          onLocate={handleLocate} 
+        />
       </div>
 
       <AnimatePresence mode="wait">
