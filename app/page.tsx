@@ -73,17 +73,20 @@ function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: ()
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="glass-dark rounded-3xl p-8 flex flex-col items-center justify-center text-center w-full max-w-md mx-auto relative overflow-hidden"
     >
-      <div className="absolute top-6 right-6 flex items-center gap-3 text-white/80">
-         <div className="flex items-center gap-1">
-           <MapPin size={16}/>
-           <span className="text-sm font-medium tracking-wider">{current.name}, {current.sys.country}</span>
-         </div>
-         {onSave && (
-           <button onClick={onSave} className={`transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
-             <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
-           </button>
-         )}
-      </div>
+       <div className="absolute top-6 right-6 flex flex-col items-end gap-1 text-white/80">
+          <div className="flex items-center gap-1">
+            <MapPin size={14} className="text-white/60"/>
+            <span className="text-sm font-medium tracking-wider">{current.name}, {current.sys.country}</span>
+          </div>
+          <span className="text-[10px] font-medium text-white/40 uppercase tracking-tighter">
+            Last updated: {format(new Date(current.dt * 1000), 'HH:mm')}
+          </span>
+          {onSave && (
+            <button onClick={onSave} className={`mt-2 transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
+              <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
+            </button>
+          )}
+       </div>
 
       <motion.div 
         initial={{ scale: 0.8 }}
