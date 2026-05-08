@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  MapPin, Search, Wind, Droplets, Sun, 
+  MapPin, Search, Wind, Droplets, Sun, Navigation,
   Loader2, Heart, Calendar
 } from "lucide-react";
 import { format } from "date-fns";
