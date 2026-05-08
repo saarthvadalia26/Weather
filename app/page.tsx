@@ -5,7 +5,8 @@ import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   MapPin, Search, Wind, Droplets, Sun, Navigation, 
-  Loader2, Heart, Calendar, CloudRain, ShieldCheck
+  Loader2, Heart, Calendar, CloudRain, ShieldCheck, Activity,
+  LocateFixed
 } from "lucide-react";
 import { format } from "date-fns";
 import Auth from "@/components/Auth";
@@ -356,6 +357,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [user, setUser] = useState<any>(null);
   const [savedLocations, setSavedLocations] = useState<any[]>([]);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
@@ -414,13 +416,16 @@ export default function Home() {
     }
   }, []);
 
-  const handleLocate = useCallback(() => {
+  const handleLocate = useCallback((isInitial = false) => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
+      if (isInitial) fetchWeather({ city: "London" });
       return;
     }
 
     setLoading(true);
+    setShowLocationModal(false);
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
         fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude });
@@ -428,7 +433,8 @@ export default function Home() {
       (err) => {
         setLoading(false);
         if (err.code === 1) {
-          setError("Location access denied. Please enable it in your browser settings.");
+          setError("Location access denied. Using London as fallback.");
+          fetchWeather({ city: "London" });
         } else {
           setError("Could not determine your location. Showing London as fallback.");
           fetchWeather({ city: "London" });
@@ -439,7 +445,15 @@ export default function Home() {
   }, [fetchWeather]);
 
   useEffect(() => {
-    handleLocate();
+    // Show modal on first load if we don't have location data
+    const hasPrompted = localStorage.getItem("atmosphere_location_prompted");
+    if (!hasPrompted) {
+      setLoading(false);
+      setShowLocationModal(true);
+      localStorage.setItem("atmosphere_location_prompted", "true");
+    } else {
+      handleLocate(true);
+    }
   }, [handleLocate]);
 
   const weatherMain = weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
@@ -463,11 +477,54 @@ export default function Home() {
         </div>
         <SearchBar 
           onSearch={(city) => fetchWeather({ city })} 
-          onLocate={handleLocate} 
+          onLocate={() => handleLocate(false)} 
         />
       </div>
 
       <AnimatePresence mode="wait">
+        {showLocationModal && (
+          <motion.div
+            key="location-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="glass rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-white/10"
+            >
+              <div className="flex justify-center mb-6">
+                <div className="bg-blue-500/20 rounded-full p-6 animate-pulse">
+                  <LocateFixed size={48} className="text-blue-400" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-black text-white mb-3">Enable Location?</h2>
+              <p className="text-white/70 text-sm mb-8 leading-relaxed font-medium">
+                Atmosphere works best with your location. See hyper-local weather and precision forecasts instantly.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => handleLocate(true)}
+                  className="w-full bg-blue-500 hover:bg-blue-400 text-white rounded-2xl py-4 text-sm font-black transition-all shadow-lg shadow-blue-500/20"
+                >
+                  Enable Location
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLocationModal(false);
+                    fetchWeather({ city: "London" });
+                  }}
+                  className="w-full glass rounded-2xl py-4 text-sm font-bold text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
         {loading ? (
           <motion.div 
             key="loading"
