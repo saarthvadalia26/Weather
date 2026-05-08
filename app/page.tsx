@@ -426,7 +426,7 @@ export default function Home() {
     <main className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br ${bgClass} transition-colors duration-1000 px-4 py-8 sm:p-8 flex flex-col items-center relative`}>
       <BackgroundParticles weatherMain={weatherMain} />
       
-      <div className="w-full max-w-md flex flex-col gap-4 mb-8 z-10">
+      <div className="w-full max-w-md flex flex-col gap-4 mb-8 z-40">
         <div className="flex items-center justify-between gap-4">
           <Auth />
         </div>
@@ -463,7 +463,7 @@ export default function Home() {
             key="content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex-1 w-full flex flex-col z-10 pb-20"
+            className="flex-1 w-full flex flex-col z-0 pb-20"
           >
             <WeatherCard 
               data={weatherData} 
