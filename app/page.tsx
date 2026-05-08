@@ -151,7 +151,7 @@ const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) => {
 
 // --- Components ---
 
-function SearchBar({ onSearch, onLocate }: { onSearch: (city: string) => void, onLocate: () => void }) {
+function SearchBar({ onSearch, onLocate, detecting }: { onSearch: (city: string) => void, onLocate: () => void, detecting?: boolean }) {
   const [query, setQuery] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -173,10 +173,15 @@ function SearchBar({ onSearch, onLocate }: { onSearch: (city: string) => void, o
       </form>
       <button 
         onClick={onLocate}
-        className="glass rounded-full p-4 text-white/70 hover:text-white hover:bg-white/20 transition-all shadow-lg group"
+        disabled={detecting}
+        className="glass rounded-full p-4 text-white/70 hover:text-white hover:bg-white/20 transition-all shadow-lg group disabled:opacity-50"
         title="Detect my location"
       >
-        <Navigation size={20} className="group-hover:scale-110 transition-transform" />
+        {detecting ? (
+          <Loader2 size={20} className="animate-spin" />
+        ) : (
+          <Navigation size={20} className="group-hover:scale-110 transition-transform" />
+        )}
       </button>
     </div>
   );
@@ -416,6 +421,8 @@ export default function Home() {
     }
   }, []);
 
+  const [detecting, setDetecting] = useState(false);
+
   const handleLocate = useCallback((isInitial = false) => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
@@ -423,29 +430,29 @@ export default function Home() {
       return;
     }
 
-    setLoading(true);
+    setDetecting(true);
+    setError("");
     setShowLocationModal(false);
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        setDetecting(false);
         fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude });
       },
       (err) => {
-        setLoading(false);
+        setDetecting(false);
         if (err.code === 1) {
-          setError("Location access denied. Using London as fallback.");
-          fetchWeather({ city: "London" });
+          setError("Location access denied. Please check your browser's location settings in the address bar.");
         } else {
-          setError("Could not determine your location. Showing London as fallback.");
+          setError("Could not determine your location. Using London as fallback.");
           fetchWeather({ city: "London" });
         }
       },
-      { timeout: 10000 }
+      { timeout: 15000, enableHighAccuracy: true }
     );
   }, [fetchWeather]);
 
   useEffect(() => {
-    // Show modal on first load if we don't have location data
     const hasPrompted = localStorage.getItem("atmosphere_location_prompted");
     if (!hasPrompted) {
       setLoading(false);
@@ -478,6 +485,7 @@ export default function Home() {
         <SearchBar 
           onSearch={(city) => fetchWeather({ city })} 
           onLocate={() => handleLocate(false)} 
+          detecting={detecting}
         />
       </div>
 
@@ -507,9 +515,11 @@ export default function Home() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => handleLocate(true)}
-                  className="w-full bg-blue-500 hover:bg-blue-400 text-white rounded-2xl py-4 text-sm font-black transition-all shadow-lg shadow-blue-500/20"
+                  disabled={detecting}
+                  className="w-full bg-blue-500 hover:bg-blue-400 text-white rounded-2xl py-4 text-sm font-black transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Enable Location
+                  {detecting && <Loader2 size={18} className="animate-spin" />}
+                  {detecting ? "Locating..." : "Enable Location"}
                 </button>
                 <button
                   onClick={() => {
