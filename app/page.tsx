@@ -4,9 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  MapPin, Search, Wind, Droplets, Sun, Navigation, 
-  Loader2, Heart, Calendar, CloudRain, ShieldCheck, Activity,
-  LocateFixed
+  MapPin, Search, Wind, Droplets, Sun, 
+  Loader2, Heart, Calendar
 } from "lucide-react";
 import { format } from "date-fns";
 import Auth from "@/components/Auth";
@@ -151,7 +150,7 @@ const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) => {
 
 // --- Components ---
 
-function SearchBar({ onSearch, onLocate, detecting }: { onSearch: (city: string) => void, onLocate: () => void, detecting?: boolean }) {
+function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
   const [query, setQuery] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -160,8 +159,8 @@ function SearchBar({ onSearch, onLocate, detecting }: { onSearch: (city: string)
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto mb-8 z-10 flex gap-2">
-      <form onSubmit={handleSubmit} className="relative flex-1">
+    <div className="relative w-full max-w-md mx-auto mb-8 z-10">
+      <form onSubmit={handleSubmit} className="relative">
         <input
           type="text"
           value={query}
@@ -171,18 +170,6 @@ function SearchBar({ onSearch, onLocate, detecting }: { onSearch: (city: string)
         />
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70" size={20} />
       </form>
-      <button 
-        onClick={onLocate}
-        disabled={detecting}
-        className="glass rounded-full p-4 text-white/70 hover:text-white hover:bg-white/20 transition-all shadow-lg group disabled:opacity-50"
-        title="Detect my location"
-      >
-        {detecting ? (
-          <Loader2 size={20} className="animate-spin" />
-        ) : (
-          <Navigation size={20} className="group-hover:scale-110 transition-transform" />
-        )}
-      </button>
     </div>
   );
 }
@@ -362,7 +349,6 @@ export default function Home() {
   const [error, setError] = useState("");
   const [user, setUser] = useState<any>(null);
   const [savedLocations, setSavedLocations] = useState<any[]>([]);
-  const [showLocationModal, setShowLocationModal] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
@@ -421,47 +407,9 @@ export default function Home() {
     }
   }, []);
 
-  const [detecting, setDetecting] = useState(false);
-
-  const handleLocate = useCallback((isInitial = false) => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
-      if (isInitial) fetchWeather({ city: "London" });
-      return;
-    }
-
-    setDetecting(true);
-    setError("");
-    setShowLocationModal(false);
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setDetecting(false);
-        fetchWeather({ lat: position.coords.latitude, lon: position.coords.longitude });
-      },
-      (err) => {
-        setDetecting(false);
-        if (err.code === 1) {
-          setError("Location access denied. Please check your browser's location settings in the address bar.");
-        } else {
-          setError("Could not determine your location. Using London as fallback.");
-          fetchWeather({ city: "London" });
-        }
-      },
-      { timeout: 15000, enableHighAccuracy: true }
-    );
-  }, [fetchWeather]);
-
   useEffect(() => {
-    const hasPrompted = localStorage.getItem("atmosphere_location_prompted");
-    if (!hasPrompted) {
-      setLoading(false);
-      setShowLocationModal(true);
-      localStorage.setItem("atmosphere_location_prompted", "true");
-    } else {
-      handleLocate(true);
-    }
-  }, [handleLocate]);
+    fetchWeather({ city: "London" });
+  }, [fetchWeather]);
 
   const weatherMain = weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
   const bgClass = useMemo(() => {
@@ -484,56 +432,10 @@ export default function Home() {
         </div>
         <SearchBar 
           onSearch={(city) => fetchWeather({ city })} 
-          onLocate={() => handleLocate(false)} 
-          detecting={detecting}
         />
       </div>
 
       <AnimatePresence mode="wait">
-        {showLocationModal && (
-          <motion.div
-            key="location-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="glass rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-white/10"
-            >
-              <div className="flex justify-center mb-6">
-                <div className="bg-blue-500/20 rounded-full p-6 animate-pulse">
-                  <LocateFixed size={48} className="text-blue-400" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-black text-white mb-3">Enable Location?</h2>
-              <p className="text-white/70 text-sm mb-8 leading-relaxed font-medium">
-                Atmosphere works best with your location. See hyper-local weather and precision forecasts instantly.
-              </p>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => handleLocate(true)}
-                  disabled={detecting}
-                  className="w-full bg-blue-500 hover:bg-blue-400 text-white rounded-2xl py-4 text-sm font-black transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {detecting && <Loader2 size={18} className="animate-spin" />}
-                  {detecting ? "Locating..." : "Enable Location"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowLocationModal(false);
-                    fetchWeather({ city: "London" });
-                  }}
-                  className="w-full glass rounded-2xl py-4 text-sm font-bold text-white/60 hover:text-white hover:bg-white/10 transition-all"
-                >
-                  Maybe Later
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
 
         {loading ? (
           <motion.div 
