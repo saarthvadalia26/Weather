@@ -3,17 +3,23 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  MapPin, Search, Wind, Droplets, Sun, Navigation,
-  Loader2, Heart, Calendar
-} from "lucide-react";
-import { format } from "date-fns";
+import { Search, MapPin, Loader2 } from "lucide-react";
 import Auth from "@/components/Auth";
 import { supabase } from "@/lib/supabase";
+import { 
+  getWeatherInfo, 
+  getBackgroundGradient, 
+  generateVibeSummary 
+} from "@/lib/weather-utils";
+
+// Optimized Components
+import { BackgroundParticles } from "@/components/weather/BackgroundParticles";
+import { WeatherCard } from "@/components/weather/WeatherCard";
+import { GridDetails } from "@/components/weather/GridDetails";
+import { HourlyForecast, DailyForecast } from "@/components/weather/Forecast";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
-// --- Type Definitions ---
 interface WeatherData {
   timelines: {
     hourly: any[];
@@ -25,130 +31,6 @@ interface WeatherData {
     lon: number;
   };
 }
-
-// --- Utility Functions ---
-const getWeatherInfo = (code: number) => {
-  const mapping: Record<number, { main: string; description: string; icon: string }> = {
-    0: { main: "Unknown", description: "Unknown", icon: "01d" },
-    1000: { main: "Clear", description: "Clear, sunny", icon: "01d" },
-    1100: { main: "Clear", description: "Mostly clear", icon: "01d" },
-    1101: { main: "Clouds", description: "Partly cloudy", icon: "02d" },
-    1102: { main: "Clouds", description: "Mostly cloudy", icon: "03d" },
-    1001: { main: "Clouds", description: "Cloudy", icon: "04d" },
-    2000: { main: "Fog", description: "Fog", icon: "50d" },
-    2100: { main: "Fog", description: "Light fog", icon: "50d" },
-    4000: { main: "Drizzle", description: "Drizzle", icon: "09d" },
-    4001: { main: "Rain", description: "Rain", icon: "10d" },
-    4200: { main: "Rain", description: "Light rain", icon: "09d" },
-    4201: { main: "Rain", description: "Heavy rain", icon: "10d" },
-    5000: { main: "Snow", description: "Snow", icon: "13d" },
-    5001: { main: "Snow", description: "Flurries", icon: "13d" },
-    5100: { main: "Snow", description: "Light snow", icon: "13d" },
-    5101: { main: "Snow", description: "Heavy snow", icon: "13d" },
-    8000: { main: "Thunderstorm", description: "Thunderstorm", icon: "11d" },
-  };
-  return mapping[code] || mapping[0];
-};
-
-const getBackgroundGradient = (weatherMain: string, isDay: boolean) => {
-  if (!isDay) return "from-slate-950 via-blue-950 to-black";
-  switch (weatherMain.toLowerCase()) {
-    case "clear": return "from-blue-600 via-blue-500 to-indigo-400";
-    case "clouds": return "from-slate-600 via-gray-700 to-slate-800";
-    case "rain": case "drizzle": return "from-slate-800 via-blue-950 to-black";
-    case "thunderstorm": return "from-purple-950 via-slate-950 to-black";
-    case "snow": return "from-blue-200 via-slate-100 to-blue-50";
-    default: return "from-blue-600 via-blue-500 to-indigo-400";
-  }
-};
-
-const generateVibeSummary = (temp: number, condition: string) => {
-  if (temp > 30) return `It's sweltering and ${condition}. Stay hydrated!`;
-  if (temp > 22) return `Perfect weather. Warm and ${condition}. Enjoy the day!`;
-  if (temp > 15) return `Mild and ${condition}. A light jacket might be nice.`;
-  if (temp > 5) return `Chilly and ${condition}. Definitely grab a coat.`;
-  return `Freezing and ${condition}. Bundle up!`;
-};
-
-// --- Animations ---
-const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) => {
-  const particles = useMemo(() => Array.from({ length: 40 }), []); // Increased particle count
-  
-  const main = weatherMain.toLowerCase();
-
-  if (main === "rain" || main === "drizzle") {
-    return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ y: -100, x: Math.random() * 100 + "vw", opacity: 0 }}
-            animate={{ 
-              y: "110vh", 
-              opacity: [0, 0.6, 0] // More visible rain
-            }}
-            transition={{ 
-              duration: Math.random() * 0.8 + 0.4, 
-              repeat: Infinity, 
-              delay: Math.random() * 2,
-              ease: "linear"
-            }}
-            className="absolute w-[2px] h-14 bg-blue-200/40"
-          />
-        ))}
-      </div>
-    );
-  }
-
-  if (main === "clear") {
-    return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <motion.div
-          animate={{ 
-            scale: [1, 1.3, 1], 
-            opacity: [0.2, 0.4, 0.2],
-            rotate: [0, 360]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-15%] right-[-15%] w-[80vw] h-[80vw] bg-yellow-300/30 blur-[150px] rounded-full"
-        />
-        <motion.div
-          animate={{ 
-            scale: [1, 1.2, 1], 
-            opacity: [0.1, 0.3, 0.1],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-orange-400/20 blur-[120px] rounded-full"
-        />
-      </div>
-    );
-  }
-
-  // Cloudy/Mist state - make it more visible like floating clouds
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {particles.slice(0, 15).map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, scale: Math.random() * 1 + 1 }}
-          animate={{ 
-            x: [Math.random() * 100 + "vw", (Math.random() * 100 - 40) + "vw"],
-            y: [Math.random() * 100 + "vh", (Math.random() * 100 - 40) + "vh"],
-            opacity: [0, 0.2, 0] // Brighter clouds
-          }}
-          transition={{ 
-            duration: Math.random() * 30 + 20, 
-            repeat: Infinity, 
-            ease: "linear" 
-          }}
-          className="absolute w-64 h-64 bg-white/20 blur-[60px] rounded-full"
-        />
-      ))}
-    </div>
-  );
-};
-
-// --- Components ---
 
 function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
   const [query, setQuery] = useState("");
@@ -173,175 +55,6 @@ function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
     </div>
   );
 }
-
-function WeatherCard({ data, onSave, isSaved }: { data: WeatherData, onSave?: () => void, isSaved?: boolean }) {
-  const current = data.timelines.hourly[0];
-  const info = getWeatherInfo(current.values.weatherCode);
-  const temp = Math.round(current.values.temperature);
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="glass-dark rounded-3xl p-8 flex flex-col items-center justify-center text-center w-full max-w-md mx-auto relative overflow-hidden shadow-2xl border border-white/10"
-    >
-       <div className="absolute top-6 right-6 flex flex-col items-end gap-1 text-white/80">
-          <div className="flex items-center gap-1">
-            <MapPin size={14} className="text-white/60"/>
-            <span className="text-sm font-bold tracking-wider">{data.location.name}</span>
-          </div>
-          <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
-            Last updated: {format(new Date(current.time), 'HH:mm')}
-          </span>
-          {onSave && (
-            <button onClick={onSave} className={`mt-2 transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
-              <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
-            </button>
-          )}
-       </div>
-
-      <motion.div 
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-        className="mt-8 mb-4 relative"
-      >
-        <div className="absolute inset-0 bg-white/20 blur-[60px] rounded-full scale-150 opacity-50" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-          src={`http://openweathermap.org/img/wn/${info.icon}@4x.png`} 
-          alt={info.main}
-          className="w-40 h-40 drop-shadow-2xl relative z-10"
-        />
-      </motion.div>
-
-      <h1 className="text-8xl font-black tracking-tighter mb-2 drop-shadow-lg text-white">
-        {temp}°
-      </h1>
-      <p className="text-lg font-bold text-white/60 mb-4 uppercase tracking-widest">
-        Feels like {Math.round(current.values.temperatureApparent)}°
-      </p>
-      <p className="text-2xl font-medium tracking-wide text-white capitalize mb-6">
-        {info.description}
-      </p>
-
-      <div className="glass rounded-2xl p-4 w-full text-left">
-        <p className="text-sm text-white italic font-medium leading-relaxed">
-          {generateVibeSummary(temp, info.description)}
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
-function GridDetails({ current }: { current: any }) {
-  const details = [
-    { icon: <Wind size={20} />, label: "Wind", value: `${current.values.windSpeed} m/s` },
-    { icon: <Droplets size={20} />, label: "Humidity", value: `${current.values.humidity}%` },
-    { icon: <Sun size={20} />, label: "UV Index", value: `${current.values.uvIndex || 0}`, sub: current.values.uvIndex > 5 ? "High" : "Low" },
-    { icon: <Navigation size={20} />, label: "Pressure", value: `${Math.round(current.values.pressureSurfaceLevel)} hPa` },
-  ];
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.4 }}
-      className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto mt-6"
-    >
-      {details.map((detail, idx) => (
-        <div key={idx} className="glass-dark rounded-2xl p-4 flex flex-col items-center justify-center gap-1 border border-white/5 hover:bg-white/10 transition-colors">
-          <div className="text-white mb-1">{detail.icon}</div>
-          <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{detail.label}</span>
-          <span className="text-lg font-black text-white">{detail.value}</span>
-          {detail.sub && <span className="text-[10px] font-bold text-white/40">{detail.sub}</span>}
-        </div>
-      ))}
-    </motion.div>
-  );
-}
-
-function HourlyForecast({ hourly }: { hourly: any[] }) {
-  const hourlyData = hourly.slice(0, 8); 
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6 }}
-      className="w-full max-w-md mx-auto mt-6 glass rounded-3xl p-6 border border-white/10 shadow-xl"
-    >
-      <h3 className="text-xs font-black text-white/80 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Sun size={14} /> 24-Hour Forecast
-      </h3>
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-        {hourlyData.map((item: any, idx: number) => {
-          const info = getWeatherInfo(item.values.weatherCode);
-          return (
-            <div key={idx} className="flex flex-col items-center min-w-[60px] gap-2">
-              <span className="text-[10px] font-bold text-white/80">
-                {format(new Date(item.time), 'HH:mm')}
-              </span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
-                alt={info.main}
-                className="w-10 h-10 filter drop-shadow-md"
-              />
-              <span className="text-sm font-black text-white">{Math.round(item.values.temperature)}°</span>
-            </div>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-}
-
-function DailyForecast({ daily }: { daily: any[] }) {
-  const dailyData = daily.slice(0, 7);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.8 }}
-      className="w-full max-w-md mx-auto mt-6 glass rounded-3xl p-6 border border-white/10 shadow-xl"
-    >
-      <h3 className="text-xs font-black text-white/80 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Calendar size={14} /> 7-Day Forecast
-      </h3>
-      <div className="flex flex-col gap-4">
-        {dailyData.map((item: any, idx: number) => {
-          const info = getWeatherInfo(item.values.weatherCodeMax);
-          const isToday = idx === 0;
-          return (
-            <div key={idx} className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white w-20">
-                {isToday ? "Today" : format(new Date(item.time), 'EEE')}
-              </span>
-              <div className="flex items-center gap-3 flex-1 px-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={`http://openweathermap.org/img/wn/${info.icon}.png`} 
-                  alt={info.main}
-                  className="w-8 h-8 filter drop-shadow-md"
-                />
-                <span className="text-xs font-bold text-white/60 truncate">{info.description}</span>
-              </div>
-              <div className="flex items-center gap-3 w-24 justify-end">
-                <span className="text-sm font-black text-white">{Math.round(item.values.temperatureMax)}°</span>
-                <span className="text-sm font-bold text-white/40">{Math.round(item.values.temperatureMin)}°</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-}
-
-// --- Main Page ---
 
 export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -411,7 +124,10 @@ export default function Home() {
     fetchWeather({ city: "London" });
   }, [fetchWeather]);
 
-  const weatherMain = weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
+  const weatherMain = useMemo(() => {
+    return weatherData ? getWeatherInfo(weatherData.timelines.hourly[0].values.weatherCode).main : "Clear";
+  }, [weatherData]);
+
   const bgClass = useMemo(() => {
     if (!weatherData) return "from-slate-900 to-black";
     const current = weatherData.timelines.hourly[0];
@@ -423,20 +139,17 @@ export default function Home() {
   }, [weatherData]);
 
   return (
-    <main className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br ${bgClass} transition-colors duration-1000 px-4 py-8 sm:p-8 flex flex-col items-center relative`}>
+    <main className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br ${bgClass} transition-colors duration-1000 px-4 py-8 sm:p-8 flex flex-col items-center relative overflow-x-hidden`}>
       <BackgroundParticles weatherMain={weatherMain} />
       
       <div className="w-full max-w-md flex flex-col gap-4 mb-8 z-40">
         <div className="flex items-center justify-between gap-4">
           <Auth />
         </div>
-        <SearchBar 
-          onSearch={(city) => fetchWeather({ city })} 
-        />
+        <SearchBar onSearch={(city) => fetchWeather({ city })} />
       </div>
 
       <AnimatePresence mode="wait">
-
         {loading ? (
           <motion.div 
             key="loading"
@@ -469,10 +182,12 @@ export default function Home() {
               data={weatherData} 
               onSave={user ? handleSaveLocation : undefined}
               isSaved={savedLocations.some(l => l.city_name === weatherData.location.name)}
+              getWeatherInfo={getWeatherInfo}
+              generateVibeSummary={generateVibeSummary}
             />
             <GridDetails current={weatherData.timelines.hourly[0]} />
-            <HourlyForecast hourly={weatherData.timelines.hourly} />
-            <DailyForecast daily={weatherData.timelines.daily} />
+            <HourlyForecast hourly={weatherData.timelines.hourly} getWeatherInfo={getWeatherInfo} />
+            <DailyForecast daily={weatherData.timelines.daily} getWeatherInfo={getWeatherInfo} />
 
             {user && savedLocations.length > 0 && (
               <div className="w-full max-w-md mx-auto mt-8">
