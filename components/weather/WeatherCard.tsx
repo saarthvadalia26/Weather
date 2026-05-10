@@ -37,20 +37,25 @@ export function WeatherCard({ data, onSave, isSaved, getWeatherInfo, generateVib
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="glass-dark rounded-3xl p-8 flex flex-col items-center justify-center text-center w-full max-w-md mx-auto relative overflow-hidden shadow-2xl border border-white/10"
     >
-       <div className="absolute top-6 right-6 flex flex-col items-end gap-1 text-white/80">
-          <div className="flex items-center gap-1">
-            <MapPin size={14} className="text-white/60"/>
-            <span className="text-sm font-bold tracking-wider">{data.location.name}</span>
+       <div className="absolute top-6 inset-x-8 flex flex-col items-center gap-1 text-white/80 z-10">
+          <div className="flex items-center justify-center gap-1 w-full max-w-[280px]">
+            <MapPin size={14} className="text-white/60 shrink-0"/>
+            <span className="text-sm font-bold tracking-wider text-center truncate md:whitespace-normal">{data.location.name}</span>
           </div>
           <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
             Last updated: {format(new Date(current.time), 'HH:mm')}
           </span>
-          {onSave && (
-            <button onClick={onSave} className={`mt-2 transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
-              <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
-            </button>
-          )}
        </div>
+
+       {onSave && (
+         <button 
+           onClick={onSave} 
+           className={`absolute top-6 right-6 z-20 transition-colors ${isSaved ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
+           title={isSaved ? "Remove from saved" : "Save location"}
+         >
+           <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
+         </button>
+       )}
 
       <motion.div 
         initial={{ scale: 0.8 }}
