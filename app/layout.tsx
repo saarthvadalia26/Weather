@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Atmosphere | Premium Weather",
+  title: "Atmosphere",
   description: "A world-class weather experience with dynamic environments and hyper-local forecasting.",
 };
 
