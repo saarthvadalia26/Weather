@@ -2,7 +2,6 @@
 
 Atmosphere is a high-precision, hyper-local weather dashboard designed with a premium dark-mode aesthetic. Powered by **Tomorrow.io**, it provides minute-by-minute forecasting with real-time atmospheric animations that react to current weather conditions.
 
-![License](https://img.shields.io/github/license/saarthvadalia26/Weather)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-blue?logo=tailwindcss)
 ![Supabase](https://img.shields.io/badge/Supabase-Database-emerald?logo=supabase)
@@ -73,12 +72,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```bash
    npm run build
    ```
-
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
