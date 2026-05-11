@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌤️ Atmosphere - Premium Weather Dashboard
 
-## Getting Started
+Atmosphere is a high-precision, hyper-local weather dashboard designed with a premium dark-mode aesthetic. Powered by **Tomorrow.io**, it provides minute-by-minute forecasting with real-time atmospheric animations that react to current weather conditions.
 
-First, run the development server:
+![License](https://img.shields.io/github/license/saarthvadalia26/Weather)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![Tailwind](https://img.shields.io/badge/Tailwind-v4-blue?logo=tailwindcss)
+![Supabase](https://img.shields.io/badge/Supabase-Database-emerald?logo=supabase)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## ✨ Key Features
+
+- **🚀 Hyper-Local Precision**: Powered by Tomorrow.io v4 API for 1km resolution weather data.
+- **✨ Live Atmosphere Animations**: 
+  - **Rainy?** Subtle raindrops fall behind your weather cards.
+  - **Sunny?** A soft, glowing sun-orb pulses in the background.
+  - **Cloudy?** Slow-moving mist particles drift across the screen.
+- **📅 7-Day Extended Forecast**: Detailed daily highs, lows, and conditions.
+- **🌡️ "Feels Like" Accuracy**: Advanced metrics including Apparent Temperature, UV Index, and Pressure.
+- **🔐 User Personalization**: 
+  - **Google Auth**: Securely sign in via Supabase.
+  - **Saved Locations**: One-tap access to your favorite cities.
+- **📱 Responsive Glassmorphism**: Stunning UI designed for both desktop and mobile devices.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Weather Provider**: [Tomorrow.io](https://www.tomorrow.io/weather-api/)
+
+---
+
+## ⚙️ Environment Variables
+
+To run this project locally, you will need to add the following variables to your `.env.local` file:
+
+```env
+# Tomorrow.io API
+TOMORROW_API_KEY=your_api_key_here
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/saarthvadalia26/Weather.git
+   ```
 
-## Learn More
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Build for production**:
+   ```bash
+   npm run build
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📜 License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Distributed under the MIT License. See `LICENSE` for more information.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🙌 Acknowledgements
+
+- Weather icons provided by OpenWeatherMap.
+- Animations inspired by Apple Weather.
+- Built with ❤️ by [Saarth Vadalia](https://github.com/saarthvadalia26)
