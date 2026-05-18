@@ -3,9 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Inter } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Loader2 } from "lucide-react";
-import Auth from "@/components/Auth";
-import { supabase } from "@/lib/supabase";
+import { Search, Loader2 } from "lucide-react";
 import { 
   getWeatherInfo, 
   getBackgroundGradient, 
@@ -60,49 +58,6 @@ export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [user, setUser] = useState<any>(null);
-  const [savedLocations, setSavedLocations] = useState<any[]>([]);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchSavedLocations = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('saved_locations')
-      .select('*');
-    if (error) console.error("Error fetching locations:", error);
-    setSavedLocations(data || []);
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchSavedLocations();
-    } else {
-      setSavedLocations([]);
-    }
-  }, [user, fetchSavedLocations]);
-
-  const handleSaveLocation = async () => {
-    if (!user || !weatherData) return;
-    const isSaved = savedLocations.some(l => l.city_name === weatherData.location.name);
-    if (isSaved) {
-      await supabase.from('saved_locations').delete().eq('city_name', weatherData.location.name);
-    } else {
-      await supabase.from('saved_locations').insert({
-        user_id: user.id,
-        city_name: weatherData.location.name,
-        country_code: "N/A",
-        lat: weatherData.location.lat,
-        lon: weatherData.location.lon
-      });
-    }
-    fetchSavedLocations();
-  };
 
   const fetchWeather = useCallback(async (params: { lat?: number; lon?: number; city?: string }) => {
     setLoading(true);
@@ -143,9 +98,6 @@ export default function Home() {
       <BackgroundParticles weatherMain={weatherMain} />
       
       <div className="w-full max-w-md flex flex-col gap-4 mb-8 z-40">
-        <div className="flex items-center justify-between gap-4">
-          <Auth />
-        </div>
         <SearchBar onSearch={(city) => fetchWeather({ city })} />
       </div>
 
@@ -180,32 +132,14 @@ export default function Home() {
           >
             <WeatherCard 
               data={weatherData} 
-              onSave={user ? handleSaveLocation : undefined}
-              isSaved={savedLocations.some(l => l.city_name === weatherData.location.name)}
+              onSave={undefined}
+              isSaved={false}
               getWeatherInfo={getWeatherInfo}
               generateVibeSummary={generateVibeSummary}
             />
             <GridDetails current={weatherData.timelines.hourly[0]} />
             <HourlyForecast hourly={weatherData.timelines.hourly} getWeatherInfo={getWeatherInfo} />
             <DailyForecast daily={weatherData.timelines.daily} getWeatherInfo={getWeatherInfo} />
-
-            {user && savedLocations.length > 0 && (
-              <div className="w-full max-w-md mx-auto mt-8">
-                <h3 className="text-xs font-black text-white/50 uppercase tracking-widest mb-4 ml-2">Saved Locations</h3>
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-4">
-                  {savedLocations.map((loc: any) => (
-                    <button
-                      key={loc.id}
-                      onClick={() => fetchWeather({ lat: loc.lat, lon: loc.lon })}
-                      className="glass rounded-2xl px-4 py-3 flex items-center gap-2 whitespace-nowrap hover:bg-white/20 transition-all shrink-0"
-                    >
-                      <MapPin size={14} className="text-white/60" />
-                      <span className="text-sm font-bold">{loc.city_name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </motion.div>
         ) : null}
       </AnimatePresence>
