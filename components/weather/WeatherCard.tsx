@@ -4,18 +4,7 @@ import { motion } from "framer-motion";
 import { MapPin, Heart } from "lucide-react";
 import { format } from "date-fns";
 import Image from "next/image";
-
-interface WeatherData {
-  timelines: {
-    hourly: any[];
-    daily: any[];
-  };
-  location: {
-    name: string;
-    lat: number;
-    lon: number;
-  };
-}
+import { WeatherData } from "@/lib/weather-utils";
 
 interface WeatherCardProps {
   data: WeatherData;

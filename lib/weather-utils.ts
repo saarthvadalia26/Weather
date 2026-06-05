@@ -1,3 +1,31 @@
+export interface WeatherTimelineValue {
+  time: string;
+  values: {
+    temperature: number;
+    temperatureApparent: number;
+    temperatureMin?: number;
+    temperatureMax?: number;
+    humidity: number;
+    windSpeed: number;
+    uvIndex: number;
+    pressureSurfaceLevel: number;
+    weatherCode: number;
+    weatherCodeMax?: number;
+  };
+}
+
+export interface WeatherData {
+  timelines: {
+    hourly: WeatherTimelineValue[];
+    daily: WeatherTimelineValue[];
+  };
+  location: {
+    name: string;
+    lat: number;
+    lon: number;
+  };
+}
+
 export const getWeatherInfo = (code: number) => {
   const mapping: Record<number, { main: string; description: string; icon: string }> = {
     0: { main: "Unknown", description: "Unknown", icon: "01d" },

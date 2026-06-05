@@ -1,28 +1,70 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+interface RainConfig {
+  x: string;
+  duration: number;
+  delay: number;
+}
+
+interface CloudConfig {
+  scale: number;
+  x1: string;
+  x2: string;
+  y1: string;
+  y2: string;
+  duration: number;
+}
+
 export const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) => {
-  const particles = useMemo(() => Array.from({ length: 40 }), []);
+  const [rainConfig, setRainConfig] = useState<RainConfig[]>([]);
+  const [cloudConfig, setCloudConfig] = useState<CloudConfig[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setRainConfig(
+      Array.from({ length: 40 }).map(() => ({
+        x: Math.random() * 100 + "vw",
+        duration: Math.random() * 0.8 + 0.4,
+        delay: Math.random() * 2
+      }))
+    );
+
+    setCloudConfig(
+      Array.from({ length: 15 }).map(() => ({
+        scale: Math.random() * 1 + 1,
+        x1: Math.random() * 100 + "vw",
+        x2: (Math.random() * 100 - 40) + "vw",
+        y1: Math.random() * 100 + "vh",
+        y2: (Math.random() * 100 - 40) + "vh",
+        duration: Math.random() * 30 + 20
+      }))
+    );
+    
+    setMounted(true);
+  }, []);
   
+  if (!mounted) return null;
+
   const main = weatherMain.toLowerCase();
 
   if (main === "rain" || main === "drizzle") {
     return (
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map((_, i) => (
+        {rainConfig.map((config, i) => (
           <motion.div
             key={i}
-            initial={{ y: -100, x: Math.random() * 100 + "vw", opacity: 0 }}
+            initial={{ y: -100, x: config.x, opacity: 0 }}
             animate={{ 
               y: "110vh", 
               opacity: [0, 0.6, 0] 
             }}
             transition={{ 
-              duration: Math.random() * 0.8 + 0.4, 
+              duration: config.duration, 
               repeat: Infinity, 
-              delay: Math.random() * 2,
+              delay: config.delay,
               ease: "linear"
             }}
             className="absolute w-[2px] h-14 bg-blue-200/40 will-change-transform"
@@ -58,17 +100,17 @@ export const BackgroundParticles = ({ weatherMain }: { weatherMain: string }) =>
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {particles.slice(0, 15).map((_, i) => (
+      {cloudConfig.map((config, i) => (
         <motion.div
           key={i}
-          initial={{ opacity: 0, scale: Math.random() * 1 + 1 }}
+          initial={{ opacity: 0, scale: config.scale }}
           animate={{ 
-            x: [Math.random() * 100 + "vw", (Math.random() * 100 - 40) + "vw"],
-            y: [Math.random() * 100 + "vh", (Math.random() * 100 - 40) + "vh"],
+            x: [config.x1, config.x2],
+            y: [config.y1, config.y2],
             opacity: [0, 0.2, 0]
           }}
           transition={{ 
-            duration: Math.random() * 30 + 20, 
+            duration: config.duration, 
             repeat: Infinity, 
             ease: "linear" 
           }}

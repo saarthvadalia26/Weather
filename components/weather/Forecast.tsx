@@ -5,13 +5,15 @@ import { Sun, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import Image from "next/image";
 
+import { WeatherTimelineValue } from "@/lib/weather-utils";
+
 interface ForecastProps {
-  hourly?: any[];
-  daily?: any[];
+  hourly?: WeatherTimelineValue[];
+  daily?: WeatherTimelineValue[];
   getWeatherInfo: (code: number) => { main: string; description: string; icon: string };
 }
 
-export function HourlyForecast({ hourly, getWeatherInfo }: { hourly: any[], getWeatherInfo: ForecastProps["getWeatherInfo"] }) {
+export function HourlyForecast({ hourly, getWeatherInfo }: { hourly: WeatherTimelineValue[], getWeatherInfo: ForecastProps["getWeatherInfo"] }) {
   const hourlyData = hourly.slice(0, 8); 
 
   return (
@@ -25,7 +27,7 @@ export function HourlyForecast({ hourly, getWeatherInfo }: { hourly: any[], getW
         <Sun size={14} /> 24-Hour Forecast
       </h3>
       <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-        {hourlyData.map((item: any, idx: number) => {
+        {hourlyData.map((item: WeatherTimelineValue, idx: number) => {
           const info = getWeatherInfo(item.values.weatherCode);
           return (
             <div key={idx} className="flex flex-col items-center min-w-[60px] gap-2">
@@ -48,7 +50,7 @@ export function HourlyForecast({ hourly, getWeatherInfo }: { hourly: any[], getW
   );
 }
 
-export function DailyForecast({ daily, getWeatherInfo }: { daily: any[], getWeatherInfo: ForecastProps["getWeatherInfo"] }) {
+export function DailyForecast({ daily, getWeatherInfo }: { daily: WeatherTimelineValue[], getWeatherInfo: ForecastProps["getWeatherInfo"] }) {
   const dailyData = daily.slice(0, 7);
 
   return (
@@ -62,8 +64,8 @@ export function DailyForecast({ daily, getWeatherInfo }: { daily: any[], getWeat
         <Calendar size={14} /> 7-Day Forecast
       </h3>
       <div className="flex flex-col gap-4">
-        {dailyData.map((item: any, idx: number) => {
-          const info = getWeatherInfo(item.values.weatherCodeMax);
+        {dailyData.map((item: WeatherTimelineValue, idx: number) => {
+          const info = getWeatherInfo(item.values.weatherCodeMax || item.values.weatherCode);
           const isToday = idx === 0;
           return (
             <div key={idx} className="flex items-center justify-between">

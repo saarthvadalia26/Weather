@@ -7,7 +7,8 @@ import { Search, Loader2 } from "lucide-react";
 import { 
   getWeatherInfo, 
   getBackgroundGradient, 
-  generateVibeSummary 
+  generateVibeSummary,
+  WeatherData
 } from "@/lib/weather-utils";
 
 // Optimized Components
@@ -17,18 +18,6 @@ import { GridDetails } from "@/components/weather/GridDetails";
 import { HourlyForecast, DailyForecast } from "@/components/weather/Forecast";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-
-interface WeatherData {
-  timelines: {
-    hourly: any[];
-    daily: any[];
-  };
-  location: {
-    name: string;
-    lat: number;
-    lon: number;
-  };
-}
 
 function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
   const [query, setQuery] = useState("");
@@ -63,13 +52,17 @@ export default function Home() {
     setLoading(true);
     setError("");
     try {
-      const query = new URLSearchParams(params as any).toString();
+      const query = new URLSearchParams(params as Record<string, string>).toString();
       const res = await fetch(`/api/weather?${query}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWeatherData(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
     } finally {
       setLoading(false);
     }

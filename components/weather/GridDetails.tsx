@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Wind, Droplets, Sun, Navigation } from "lucide-react";
+import { WeatherTimelineValue } from "@/lib/weather-utils";
 
-export function GridDetails({ current }: { current: any }) {
+export function GridDetails({ current }: { current: WeatherTimelineValue }) {
   const details = [
     { icon: <Wind size={20} />, label: "Wind", value: `${current.values.windSpeed} m/s` },
     { icon: <Droplets size={20} />, label: "Humidity", value: `${current.values.humidity}%` },
