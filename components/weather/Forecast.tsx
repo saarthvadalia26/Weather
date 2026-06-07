@@ -83,8 +83,8 @@ export function DailyForecast({ daily, getWeatherInfo }: { daily: WeatherTimelin
                 <span className="text-xs font-bold text-white/60 truncate">{info.description}</span>
               </div>
               <div className="flex items-center gap-3 w-24 justify-end">
-                <span className="text-sm font-black text-white">{Math.round(item.values.temperatureMax)}°</span>
-                <span className="text-sm font-bold text-white/40">{Math.round(item.values.temperatureMin)}°</span>
+                <span className="text-sm font-black text-white">{Math.round(item.values.temperatureMax ?? item.values.temperature)}°</span>
+                <span className="text-sm font-bold text-white/40">{Math.round(item.values.temperatureMin ?? item.values.temperature)}°</span>
               </div>
             </div>
           );
