@@ -1,25 +1,68 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Default / Dark Theme */
+:root {
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: rgba(255, 255, 255, 0.80);
+  --theme-text-muted: rgba(255, 255, 255, 0.55);
+  --theme-text-dim: rgba(255, 255, 255, 0.38);
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+  --glass-card-bg: rgba(0, 0, 0, 0.42);
+  --glass-subtle-bg: rgba(255, 255, 255, 0.05);
+  --input-bg: rgba(255, 255, 255, 0.10);
+  --input-border: rgba(255, 255, 255, 0.18);
+  --input-placeholder: rgba(255, 255, 255, 0.65);
+}
+
+/* Light Theme */
+html.light {
+  --theme-text-primary: #0f172a;
+  --theme-text-secondary: #334155;
+  --theme-text-muted: #64748b;
+  --theme-text-dim: #94a3b8;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-shadow: 0 12px 36px 0 rgba(15, 23, 42, 0.12);
+  --glass-card-bg: rgba(255, 255, 255, 0.85);
+  --glass-subtle-bg: rgba(255, 255, 255, 0.55);
+  --input-bg: rgba(255, 255, 255, 0.90);
+  --input-border: rgba(148, 163, 184, 0.40);
+  --input-placeholder: rgba(100, 116, 139, 0.80);
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/[0.05] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
-  .glass-dark {
-    @apply bg-black/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+  .glass-card {
+    background-color: var(--glass-card-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
-}
-
-:root {
-  --foreground-rgb: 255, 255, 255;
+  .glass-subtle {
+    background-color: var(--glass-subtle-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+  }
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
+  color: var(--theme-text-primary);
   min-height: 100vh;
+  transition: color 0.3s ease, background 0.3s ease;
 }
 
 /* Hide scrollbar for clean horizontal lists */
@@ -30,3 +73,4 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+

@@ -1,52 +1,55 @@
-# 🌤️ Atmosphere - Premium Weather Dashboard
+# 🌤️ Atmosphere — Dynamic Hyper-Local Weather Dashboard
 
-Atmosphere is a high-precision, hyper-local weather dashboard designed with a premium dark-mode aesthetic. Powered by **Tomorrow.io**, it provides minute-by-minute forecasting with real-time atmospheric animations that react to current weather conditions.
+Atmosphere is a world-class, responsive weather dashboard built with Next.js (App Router), Tailwind CSS v4, and Framer Motion. Powered by the **Tomorrow.io** forecast API, it combines atmospheric animations, dynamic day/night awareness, adaptive Dark & Light themes, and deep meteorological metrics.
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-blue?logo=tailwindcss)
-![Supabase](https://img.shields.io/badge/Supabase-Database-emerald?logo=supabase)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 
 ---
 
 ## ✨ Key Features
 
-- **🚀 Hyper-Local Precision**: Powered by Tomorrow.io v4 API for 1km resolution weather data.
-- **✨ Live Atmosphere Animations**: 
-  - **Rainy?** Subtle raindrops fall behind your weather cards.
-  - **Sunny?** A soft, glowing sun-orb pulses in the background.
-  - **Cloudy?** Slow-moving mist particles drift across the screen.
-- **📅 7-Day Extended Forecast**: Detailed daily highs, lows, and conditions.
-- **🌡️ "Feels Like" Accuracy**: Advanced metrics including Apparent Temperature, UV Index, and Pressure.
-- **🔐 User Personalization**: 
-  - **Google Auth**: Securely sign in via Supabase.
-  - **Saved Locations**: One-tap access to your favorite cities.
-- **📱 Responsive Glassmorphism**: Stunning UI designed for both desktop and mobile devices.
+- **🌓 Dynamic Dark & Light Themes**: 1-tap animated toggle with persistent theme preference, system mode detection, and contrast-safe glassmorphism.
+- **🚀 Hardened Server API Route**: Built-in sliding-window rate limiting, strict coordinate bounds checking, and input sanitization to protect API quotas.
+- **📱 Fully Responsive Multi-Column Dashboard**:
+  - **Desktop (1080p, 1440p, 4K)**: 2-column layout (Hero card on the left; Grid metrics, 24-hour horizontal forecast, and 7-day extended forecast on the right).
+  - **Mobile (< 640px)**: Ergonomic touch-optimized single-column layout with responsive typography.
+- **🕒 Solar Timezone Awareness**: Automatically calculates local day/night status based on target city coordinates rather than visitor device clock.
+- **📍 1-Tap Geolocation**: Automatically fetch local weather using browser GPS coordinates with full error handling.
+- **✨ Atmospheric Background Particles**:
+  - **Rain & Drizzle**: Animated falling raindrops with viewport-aware particle density.
+  - **Snow & Ice**: Soft floating snowflakes with high-contrast background gradients.
+  - **Clear Skies**: Rotating glowing sun orb.
+  - **Clouds & Mist**: Drifting atmospheric fog patches.
+  - **Reduced Motion Support**: Automatically respects `prefers-reduced-motion` to conserve battery and avoid motion sensitivity.
+- **📊 Extended Meteorological Metrics**:
+  - UV Index with risk classifications.
+  - EPA Air Quality Index (AQI).
+  - Surface Atmospheric Pressure (hPa).
+  - Wind Speed & Humidity.
+  - Visibility (km) with clear line-of-sight status.
+  - Interactive temperature range bars for the 7-day forecast.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Framework**: [Next.js (App Router)](https://nextjs.org/)
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Motion**: [Framer Motion](https://www.framer.com/motion/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Weather Provider**: [Tomorrow.io](https://www.tomorrow.io/weather-api/)
+- **Weather API**: [Tomorrow.io v4 Forecast API](https://www.tomorrow.io/weather-api/)
 
 ---
 
 ## ⚙️ Environment Variables
 
-To run this project locally, you will need to add the following variables to your `.env.local` file:
+Create a `.env.local` file in the root directory:
 
 ```env
-# Tomorrow.io API
+# Tomorrow.io API Key (Required)
 TOMORROW_API_KEY=your_api_key_here
-
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 ---
@@ -56,6 +59,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/saarthvadalia26/Weather.git
+   cd Weather
    ```
 
 2. **Install dependencies**:
@@ -63,7 +67,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    npm install
    ```
 
-3. **Run the development server**:
+3. **Run development server**:
    ```bash
    npm run dev
    ```
@@ -78,5 +82,5 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ## 🙌 Acknowledgements
 
 - Weather icons provided by OpenWeatherMap.
-- Animations inspired by Apple Weather.
+- Meteorological data provided by Tomorrow.io.
 - Built with ❤️ by [Saarth Vadalia](https://github.com/saarthvadalia26)
